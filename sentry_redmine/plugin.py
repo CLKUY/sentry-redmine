@@ -1,7 +1,6 @@
 """
 sentry_redmine.plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-
 :copyright: (c) 2011 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
@@ -26,10 +25,11 @@ class RedmineOptionsForm(forms.Form):
     key = forms.CharField(widget=forms.TextInput(attrs={'class': 'span9'}))
     project_id = forms.CharField(widget=forms.TextInput(attrs={'class': 'span9'}))
     tracker_id = forms.CharField(widget=forms.TextInput(attrs={'class': 'span9'}))
+    verify_ssl = forms.BooleanField()
 
     def clean(self):
         config = self.cleaned_data
-        if not all(config.get(k) for k in ('host', 'key', 'project_id', 'tracker_id')):
+        if not all(config.get(k) for k in ('host', 'key', 'project_id', 'tracker_id', 'verify_ssl')):
             raise forms.ValidationError('Missing required configuration value')
         return config
 
@@ -41,12 +41,12 @@ class RedmineNewIssueForm(forms.Form):
 
 class RedminePlugin(IssuePlugin):
     author = 'Idea Device'
-    author_url = 'https://github.com/ideadevice/sentry-redmine'
-    version = '0.1.0'
-    description = "Integrate Redmine issue tracking by linking a user account to a project."
+    author_url = 'https://github.com/Adam16/sentry-redmine'
+    version = '0.2.0'
+    description = 'Integrate Redmine issue tracking by linking a user account to a project.'
     resource_links = [
-        ('Bug Tracker', 'https://github.com/ideadevice/sentry-redmine/issues'),
-        ('Source', 'https://github.com/ideadevice/sentry-redmine'),
+        ('Bug Tracker', 'https://github.com/Adam16/sentry-redmine/issues'),
+        ('Source', 'https://github.com/Adam16/sentry-redmine'),
     ]
 
     slug = 'redmine'
@@ -57,7 +57,7 @@ class RedminePlugin(IssuePlugin):
     new_issue_form = RedmineNewIssueForm
 
     def is_configured(self, project, **kwargs):
-        return all((self.get_option(k, project) for k in ('host', 'key', 'project_id', 'tracker_id')))
+        return all((self.get_option(k, project) for k in ('host', 'key', 'project_id', 'tracker_id', 'verify_ssl')))
 
     def get_new_issue_title(self, **kwargs):
         return 'Create Redmine Task'
@@ -94,6 +94,7 @@ class RedminePlugin(IssuePlugin):
         """Create a Redmine issue"""
         headers = { "X-Redmine-API-Key": self.get_option('key', group.project),
                     'content-type': 'application/json' }
+        verifySSL = self.get_option('verify_ssl', group.project)
         url = urlparse.urljoin(self.get_option('host', group.project), "issues.json")
         payload = {
             'project_id': self.get_option('project_id', group.project),
@@ -108,7 +109,7 @@ class RedminePlugin(IssuePlugin):
         #print >> sys.stderr, pformat(dir(group))
 
         try:
-            r = requests.post(url, data=json.dumps({'issue': payload}), headers=headers)
+            r = requests.post(url, data=json.dumps({'issue': payload}), headers=headers, verify=verifySSL)
         except requests.exceptions.HTTPError as e:
             raise forms.ValidationError('Unable to reach Redmine host: %s' % repr(e))
 
