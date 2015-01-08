@@ -29,7 +29,7 @@ class RedmineOptionsForm(forms.Form):
 
     def clean(self):
         config = self.cleaned_data
-        if not all(config.get(k) for k in ('host', 'key', 'project_id', 'tracker_id', 'verify_ssl')):
+        if not all(config.get(k) for k in ('host', 'key', 'project_id', 'tracker_id')):
             raise forms.ValidationError('Missing required configuration value')
         return config
 
@@ -57,7 +57,7 @@ class RedminePlugin(IssuePlugin):
     new_issue_form = RedmineNewIssueForm
 
     def is_configured(self, project, **kwargs):
-        return all((self.get_option(k, project) for k in ('host', 'key', 'project_id', 'tracker_id', 'verify_ssl')))
+        return all((self.get_option(k, project) for k in ('host', 'key', 'project_id', 'tracker_id')))
 
     def get_new_issue_title(self, **kwargs):
         return 'Create Redmine Task'
