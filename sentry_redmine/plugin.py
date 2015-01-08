@@ -7,6 +7,7 @@ sentry_redmine.plugin
 
 import sys
 import logging
+from redmine import Redmine
 from pprint import pformat
 from django import forms
 from django.utils.translation import ugettext_lazy as _
@@ -16,7 +17,6 @@ from sentry.plugins.bases.issue import IssuePlugin
 
 import httplib
 import urlparse
-import requests
 import simplejson as json
 
 
@@ -41,12 +41,12 @@ class RedmineNewIssueForm(forms.Form):
 
 class RedminePlugin(IssuePlugin):
     author = 'Idea Device'
-    author_url = 'https://github.com/Adam16/sentry-redmine'
-    version = '0.2.0'
+    author_url = 'https://github.com/ljarufe/sentry-redmine/'
+    version = '0.3.0'
     description = 'Integrate Redmine issue tracking by linking a user account to a project.'
     resource_links = [
-        ('Bug Tracker', 'https://github.com/Adam16/sentry-redmine/issues'),
-        ('Source', 'https://github.com/Adam16/sentry-redmine'),
+        ('Bug Tracker', 'https://github.com/ljarufe/sentry-redmine/issues'),
+        ('Source', 'https://github.com/ljarufe/sentry-redmine'),
     ]
 
     slug = 'redmine'
@@ -92,38 +92,24 @@ class RedminePlugin(IssuePlugin):
 
     def create_issue(self, group, form_data, **kwargs):
         """Create a Redmine issue"""
-        headers = { "X-Redmine-API-Key": self.get_option('key', group.project),
-                    'content-type': 'application/json' }
-        verifySSL = self.get_option('verify_ssl', group.project)
         url = urlparse.urljoin(self.get_option('host', group.project), "issues.json")
-        payload = {
-            'project_id': self.get_option('project_id', group.project),
-            'tracker_id': self.get_option('tracker_id', group.project),
-            'status_id': '0',
-            'subject': form_data['title'].encode('utf-8'),
-            'description': form_data['description'].encode('utf-8'),
-        }
-        #print >> sys.stderr, "url:", url
-        #print >> sys.stderr, "payload:\n", pformat(payload)
-        #print >> sys.stderr, pformat(group)
-        #print >> sys.stderr, pformat(dir(group))
-
+        key = self.get_option('key', group.project)
+        verify = self.get_option('verify_ssl', group.project)
+        redmine = Redmine(url, key=key, requests={'verify': verify})
+        
+        project_id = self.get_option('project_id', group.project),
+        tracker_id = self.get_option('tracker_id', group.project),
+        subject = form_data['title'].encode('utf-8'),
+        description = form_data['description'].encode('utf-8'),
         try:
-            r = requests.post(url, data=json.dumps({'issue': payload}), headers=headers, verify=verifySSL)
+            issue = redmine.issue.create(project_id=project_id, subject=subject, tracker_id=tracker_id, description=description, status_id=1)
         except requests.exceptions.HTTPError as e:
             raise forms.ValidationError('Unable to reach Redmine host: %s' % repr(e))
 
-        try:
-            data = json.loads(r.text)
-        except json.JSONDecodeError as e:
-            #print >> sys.stderr, "ERROR: %s" % e
-            #print >> sys.stderr, "RESP:", r.text
-            raise forms.ValidationError('Unable to reach Redmine host: %s' % repr(e))
-
-        if not 'issue' in data or not 'id' in data['issue']:
+        if not issue:
             raise forms.ValidationError('Unable to create redmine ticket')
 
-        return data['issue']['id']
+        return issue.id
 
     def get_issue_url(self, group, issue_id, **kwargs):
         host = self.get_option('host', group.project)
