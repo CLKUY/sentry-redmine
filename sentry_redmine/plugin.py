@@ -92,24 +92,38 @@ class RedminePlugin(IssuePlugin):
 
     def create_issue(self, group, form_data, **kwargs):
         """Create a Redmine issue"""
+        headers = { "X-Redmine-API-Key": self.get_option('key', group.project),
+                    'content-type': 'application/json' }
+        verifySSL = self.get_option('verify_ssl', group.project)
         url = urlparse.urljoin(self.get_option('host', group.project), "issues.json")
-        key = self.get_option('key', group.project)
-        verify = self.get_option('verify_ssl', group.project)
-        redmine = Redmine(url, key=key, requests={'verify': verify})
-        
-        project_id = self.get_option('project_id', group.project),
-        tracker_id = self.get_option('tracker_id', group.project),
-        subject = form_data['title'].encode('utf-8'),
-        description = form_data['description'].encode('utf-8'),
+        payload = {
+            'project_id': self.get_option('project_id', group.project),
+            'tracker_id': self.get_option('tracker_id', group.project),
+            'status_id': '0',
+            'subject': form_data['title'].encode('utf-8'),
+            'description': form_data['description'].encode('utf-8'),
+        }
+        #print >> sys.stderr, "url:", url
+        #print >> sys.stderr, "payload:\n", pformat(payload)
+        #print >> sys.stderr, pformat(group)
+        #print >> sys.stderr, pformat(dir(group))
+
         try:
-            issue = redmine.issue.create(project_id=project_id, subject=subject, tracker_id=tracker_id, description=description, status_id=1)
+            r = requests.post(url, data=json.dumps({'issue': payload}), headers=headers, verify=verifySSL)
         except requests.exceptions.HTTPError as e:
             raise forms.ValidationError('Unable to reach Redmine host: %s' % repr(e))
 
-        if not issue:
+        try:
+            data = json.loads(r.text)
+        except json.JSONDecodeError as e:
+            #print >> sys.stderr, "ERROR: %s" % e
+            #print >> sys.stderr, "RESP:", r.text
+            raise forms.ValidationError('Unable to reach Redmine host: %s' % repr(e))
+
+        if not 'issue' in data or not 'id' in data['issue']:
             raise forms.ValidationError('Unable to create redmine ticket')
 
-        return issue.id
+        return data['issue']['id']
 
     def get_issue_url(self, group, issue_id, **kwargs):
         host = self.get_option('host', group.project)
