@@ -15,6 +15,7 @@ from django.core.urlresolvers import reverse
 
 from sentry.plugins.bases.issue import IssuePlugin
 
+import requests
 import httplib
 import urlparse
 import simplejson as json
