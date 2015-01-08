@@ -25,7 +25,7 @@ class RedmineOptionsForm(forms.Form):
     key = forms.CharField(widget=forms.TextInput(attrs={'class': 'span9'}))
     project_id = forms.CharField(widget=forms.TextInput(attrs={'class': 'span9'}))
     tracker_id = forms.CharField(widget=forms.TextInput(attrs={'class': 'span9'}))
-    verify_ssl = forms.BooleanField()
+    verify_ssl = forms.BooleanField(required=False)
 
     def clean(self):
         config = self.cleaned_data
