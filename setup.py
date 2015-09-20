@@ -25,10 +25,10 @@ install_requires = [
 
 setup(
     name='sentry-redmine',
-    version='0.3.0',
-    author='Luis Jarufe',
-    author_email='a@ideadevice.com',
-    url='http://github.com/ljarufe/sentry-redmine',
+    version='0.3.1',
+    author='CLKUY',
+    author_email='service@sentry.clk.com.uy',
+    url='http://github.com/CLKUY/sentry-redmine',
     description='A Sentry extension which integrates with Redmine.',
     long_description=__doc__,
     license='BSD',
