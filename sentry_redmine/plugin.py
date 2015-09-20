@@ -65,11 +65,7 @@ class RedminePlugin(IssuePlugin):
 
     def _get_group_description(self, request, group, event):
         output = [
-            'Sentry: %s' % request.build_absolute_uri(reverse('sentry-group', kwargs={
-                'project_id': group.project.slug,
-                'team_slug': group.team.slug,
-                'group_id': group.id,
-            })),
+            'Sentry: %s' % request.build_absolute_uri(reverse('sentry-group', args=[group.team.slug, group.project.slug, group.id])),
         ]
         output.append('\n* Server: @%s@' % event.server_name)
         output.append('* Logger: @%s@' % event.logger)
