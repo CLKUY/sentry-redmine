@@ -10,7 +10,7 @@ Install
 
 Install the package via ``pip``::
 
-    pip install sentry-redmine
+    pip install -e git+https://github.com/CLKUY/sentry-redmine.git#egg=sentry_redmine
 
 Configuration
 -------------
