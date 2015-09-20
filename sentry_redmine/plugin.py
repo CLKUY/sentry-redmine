@@ -1,7 +1,7 @@
 """
 sentry_redmine.plugin
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-:copyright: (c) 2011 by the Sentry Team, see AUTHORS for more details.
+:copyright: (c) 2015 by the Sentry Team, see AUTHORS for more details.
 :license: BSD, see LICENSE for more details.
 """
 
@@ -42,12 +42,12 @@ class RedmineNewIssueForm(forms.Form):
 
 class RedminePlugin(IssuePlugin):
     author = 'Idea Device'
-    author_url = 'https://github.com/ljarufe/sentry-redmine/'
+    author_url = 'https://github.com/CLKUY/sentry-redmine/'
     version = '0.3.0'
     description = 'Integrate Redmine issue tracking by linking a user account to a project.'
     resource_links = [
-        ('Bug Tracker', 'https://github.com/ljarufe/sentry-redmine/issues'),
-        ('Source', 'https://github.com/ljarufe/sentry-redmine'),
+        ('Bug Tracker', 'https://github.com/CLKUY/sentry-redmine/issues'),
+        ('Source', 'https://github.com/CLKUY/sentry-redmine'),
     ]
 
     slug = 'redmine'
